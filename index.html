@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PUMPS AI - Game</title>
     <style>
-        /* CSS: Стили оформления */
+        /* Основные стили */
         body {
             background-color: #0a0a0a;
             color: #00FF88;
@@ -17,7 +17,7 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            /* Запрещаем выделение и системные жесты */
+            /* Запрещаем выделение текста и жесты браузера */
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
@@ -39,84 +39,90 @@
             letter-spacing: 5px;
             text-transform: uppercase;
             font-size: 14px;
+            color: #00FF88;
+            opacity: 0.8;
         }
 
-        /* Область тапа */
+        /* Область для клика */
         .pump-area {
             position: relative;
             width: 300px;
             height: 300px;
             background: linear-gradient(145deg, #121212, #1a1a1a);
-            border-radius: 20px;
+            border-radius: 30px;
             border: 2px solid #333;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.1s, border-color 0.3s;
+            transition: transform 0.05s;
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Эффект нажатия */
         .pump-area:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
             border-color: #00FF88;
         }
 
-        /* Имитация картинки из вашего скрина */
         .robot-icon {
-            width: 200px;
-            height: 200px;
+            width: 220px;
+            height: 220px;
             background: url('pumps.png') no-repeat center;
             background-size: contain;
-            pointer-events: none; /* Чтобы клик проходил сквозь картинку на контейнер */
+            pointer-events: none; /* Чтобы клик шел "сквозь" картинку */
         }
 
         .pump-button-ui {
             background: #00FF88;
             color: #000;
-            padding: 10px 40px;
-            border-radius: 5px;
+            padding: 10px 30px;
+            border-radius: 8px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-top: 15px;
+            margin-top: 10px;
             pointer-events: none;
+            font-size: 14px;
         }
 
         /* Таблица лидеров */
         .leaderboard {
-            margin-top: 40px;
+            margin-top: 30px;
             background: rgba(255, 255, 255, 0.05);
             padding: 20px;
-            border-radius: 15px;
-            width: 300px;
+            border-radius: 20px;
+            width: 280px;
             text-align: center;
+            border: 1px solid rgba(0, 255, 136, 0.1);
         }
 
         .leaderboard h3 {
-            margin-top: 0;
+            margin: 0 0 10px 0;
             color: #00FF88;
-            font-size: 16px;
+            font-size: 18px;
+            text-transform: uppercase;
         }
 
         .status {
-            font-size: 12px;
+            font-size: 13px;
             color: #888;
         }
 
-        /* Стиль для вылетающего текста +1 */
+        /* Анимация +1 */
         .floating-text {
             position: fixed;
             color: #00FF88;
             font-weight: bold;
+            font-size: 24px;
             pointer-events: none;
             z-index: 1000;
-            animation: moveUp 0.5s ease-out forwards;
+            animation: floatUp 0.6s ease-out forwards;
         }
 
-        @keyframes moveUp {
+        @keyframes floatUp {
             0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(-80px); opacity: 0; }
         }
     </style>
 </head>
@@ -138,59 +144,65 @@
     </div>
 
     <script>
-        let count = 0;
+        // 1. Загружаем счет из локального хранилища (localStorage)
+        let count = parseInt(localStorage.getItem('user_pumps_score')) || 0;
+        
         const scoreElement = document.getElementById('score');
         const clickerElement = document.getElementById('pumpClicker');
         const statusElement = document.getElementById('loadingStatus');
 
-        // Основная функция клика/тапа
-        function handleAction(event) {
-            // Предотвращаем стандартное поведение (зум, скролл)
-            event.preventDefault();
-            
+        // Устанавливаем начальное значение счета
+        scoreElement.innerText = count;
+
+        // Функция обработки клика/тапа
+        function handleInteraction(event) {
+            // Отменяем стандартные действия браузера
+            if (event.cancelable) event.preventDefault();
+
             // Увеличиваем счет
             count++;
             scoreElement.innerText = count;
 
-            // Вибрация (если поддерживается)
+            // 2. Сохраняем новый счет в память устройства
+            localStorage.setItem('user_pumps_score', count);
+
+            // Вибрация (для смартфонов)
             if (navigator.vibrate) {
-                navigator.vibrate(50);
+                navigator.vibrate(40);
             }
 
-            // Определяем координаты для анимации +1
-            let x, y;
-            if (event.touches && event.touches[0]) {
-                x = event.touches[0].clientX;
-                y = event.touches[0].clientY;
-            } else {
-                x = event.clientX;
-                y = event.clientY;
-            }
+            // Получаем координаты тапа
+            const x = event.clientX || (event.touches && event.touches[0].clientX);
+            const y = event.clientY || (event.touches && event.touches[0].clientY);
 
-            createFloatingText(x, y);
+            if (x && y) {
+                createPlusOne(x, y);
+            }
         }
 
-        // Используем pointerdown для мгновенного отклика на всех устройствах
-        clickerElement.addEventListener('pointerdown', handleAction);
+        // Используем pointerdown для мгновенной реакции на нажатие
+        clickerElement.addEventListener('pointerdown', handleInteraction);
 
-        function createFloatingText(x, y) {
-            const plus = document.createElement('div');
-            plus.innerText = '+1';
-            plus.className = 'floating-text';
-            plus.style.left = x + 'px';
-            plus.style.top = y + 'px';
+        // Функция создания вылетающей цифры +1
+        function createPlusOne(x, y) {
+            const el = document.createElement('div');
+            el.innerText = '+1';
+            el.className = 'floating-text';
+            el.style.left = (x - 15) + 'px';
+            el.style.top = (y - 30) + 'px';
 
-            document.body.appendChild(plus);
+            document.body.appendChild(el);
 
             // Удаляем элемент после завершения анимации
             setTimeout(() => {
-                plus.remove();
-            }, 500);
+                el.remove();
+            }, 600);
         }
 
-        // Имитация загрузки
+        // Имитация статуса сервера
         setTimeout(() => {
-            statusElement.innerText = "Сервер подключен. Удачи!";
+            statusElement.innerText = "Данные синхронизированы ✅";
+            statusElement.style.color = "#00FF88";
         }, 2000);
     </script>
 </body>
