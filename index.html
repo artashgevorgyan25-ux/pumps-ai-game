@@ -7,14 +7,14 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --tg-theme-button-color: #00ff88;
+      --primary-color: #00ff88;
       --bg-color: #0b0b0b;
     }
 
     body {
       margin: 0;
       background: radial-gradient(circle at top, #1a1a1a, #000);
-      color: #00ff88;
+      color: var(--primary-color);
       font-family: 'Arial', sans-serif;
       display: flex;
       flex-direction: column;
@@ -33,17 +33,18 @@
     }
 
     .counter {
-      font-size: 48px;
+      font-size: 56px;
       font-weight: 900;
       margin: 0;
-      text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
     }
 
     .label {
-      font-size: 14px;
-      letter-spacing: 3px;
-      opacity: 0.7;
+      font-size: 16px;
+      letter-spacing: 4px;
+      opacity: 0.8;
       text-transform: uppercase;
+      margin: 5px 0;
     }
 
     .main-btn-container {
@@ -56,31 +57,31 @@
       height: auto;
       cursor: pointer;
       transition: transform 0.05s ease;
-      filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+      filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.3));
     }
 
     .pump-img:active {
-      transform: scale(0.95);
+      transform: scale(0.94);
     }
 
     .tap-hint {
       margin-top: 20px;
       font-size: 18px;
-      opacity: 0.6;
+      opacity: 0.7;
+      font-weight: bold;
       animation: pulse 1.5s infinite;
     }
 
     @keyframes pulse {
-      0% { opacity: 0.3; }
-      50% { opacity: 0.8; }
-      100% { opacity: 0.3; }
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
     }
 
     .particle {
       position: absolute;
       color: #fff;
       font-weight: bold;
-      font-size: 28px;
+      font-size: 32px;
       pointer-events: none;
       animation: floatUp 0.7s ease-out forwards;
       z-index: 100;
@@ -88,16 +89,16 @@
 
     @keyframes floatUp {
       0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-150px); opacity: 0; }
+      100% { transform: translateY(-160px) scale(1.2); opacity: 0; }
     }
   </style>
 </head>
 <body>
 
   <div class="status-bar">
-    <div class="label">Balance</div>
+    <div class="label">BALANCE</div>
     <div class="counter" id="score">0</div>
-    <div class="label">USDT</div>
+    <div class="label">PMPS</div> 
   </div>
 
   <div class="main-btn-container">
@@ -110,42 +111,39 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let score = localStorage.getItem('pumps_ai_score') ? parseInt(localStorage.getItem('pumps_ai_score')) : 0;
+    // Загрузка счета
+    let score = localStorage.getItem('pumps_ai_score_v2') ? parseInt(localStorage.getItem('pumps_ai_score_v2')) : 0;
     const scoreEl = document.getElementById('score');
     const clickBtn = document.getElementById('clickBtn');
 
-    scoreEl.textContent = score;
+    scoreEl.textContent = score.toLocaleString();
 
     function handleEvent(e) {
       score++;
-      scoreEl.textContent = score;
-      localStorage.setItem('pumps_ai_score', score);
+      scoreEl.textContent = score.toLocaleString();
+      localStorage.setItem('pumps_ai_score_v2', score);
 
-      // Вибрация
+      // Вибрация для Telegram
       if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('medium');
+        tg.HapticFeedback.impactOccurred('light');
       }
 
-      // Эффект +1
+      // Эффект вылетающего текста
       const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
       const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
       
       const p = document.createElement('div');
       p.className = 'particle';
       p.textContent = '+1';
-      p.style.left = x + 'px';
-      p.style.top = y + 'px';
+      p.style.left = (x - 20) + 'px';
+      p.style.top = (y - 40) + 'px';
       document.body.appendChild(p);
       
       setTimeout(() => p.remove(), 700);
     }
 
-    clickBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      handleEvent(e);
-    });
-
-    clickBtn.addEventListener('click', (e) => {
+    // Поддержка и кликов, и тапов
+    clickBtn.addEventListener('pointerdown', (e) => {
       handleEvent(e);
     });
   </script>
