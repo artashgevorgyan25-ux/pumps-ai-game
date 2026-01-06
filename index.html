@@ -1,82 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>PUMPS AI — Pump to Infinity</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      color: #00ff88;
-    }
+<meta charset="UTF-8">
+<title>PUMPS AI — Pump to Infinity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    #hud {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      font-size: 20px;
-      z-index: 10;
-    }
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
 
-    canvas {
-      display: block;
-    }
-  </style>
+#ui {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  color: #00ff99;
+  font-size: 22px;
+  font-weight: bold;
+  z-index: 10;
+}
+
+canvas {
+  display: block;
+}
+</style>
 </head>
+
 <body>
 
-<div id="hud">USDT: <span id="score">0</span></div>
+<div id="ui">USDT: <span id="score">0</span></div>
 <canvas id="game"></canvas>
 
 <script>
+/* === CANVAS === */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let score = 0;
-
-// загружаем картинку PUMPS AI
-const pumps = new Image();
-pumps.src = "pumps-ai.png";
-
-const player = {
-  x: canvas.width / 2,
-  y: canvas.height / 2,
-  size: 120,
-  vx: 2,
-  vy: 2
-};
 
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
 window.addEventListener("resize", resize);
+resize();
 
-canvas.addEventListener("click", () => {
-  score += 1;
-  document.getElementById("score").textContent = score;
-  player.vx *= 1.05;
-  player.vy *= 1.05;
+/* === SCORE === */
+let score = 0;
+const scoreEl = document.getElementById("score");
+
+/* === IMAGE === */
+const pumpImg = new Image();
+pumpImg.src = "pumps-ai.png";
+
+/* === POSITION === */
+let x = canvas.width / 2;
+let y = canvas.height / 2;
+const size = 120;
+
+/* === MOUSE MOVE === */
+window.addEventListener("mousemove", (e) => {
+  x = e.clientX;
+  y = e.clientY;
 });
 
-function drawGlow() {
-  ctx.shadowBlur = 30;
-  ctx.shadowColor = "#00ff88";
-}
+/* === CLICK === */
+window.addEventListener("click", () => {
+  score++;
+  scoreEl.textContent = score;
+});
 
-function update() {
+/* === DRAW LOOP === */
+function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  player.x += player.vx;
-  player.y += player.vy;
-
-  if (player.x < player.size/2 || player.x > canvas.width - player.size/2) {
-    player.vx *= -1;
+  if (pumpImg.complete) {
+    ctx.drawImage(
+      pumpImg,
+      x - size / 2,
+      y - size / 2,
+      size,
+      size
+    );
   }
-  if (player.y < player.size/2 || pl
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>
