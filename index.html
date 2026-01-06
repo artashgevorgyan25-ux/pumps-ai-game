@@ -1,125 +1,70 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<title>PUMPS AI — Pump To Infinity</title>
+<meta charset="UTF-8">
+<title>PUMPS AI — Pump to Infinity</title>
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: black;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-  }
-  #ui {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    color: #00ff99;
-    font-size: 20px;
-    z-index: 10;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+#ui {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  color: #00ff99;
+  font-size: 22px;
+  z-index: 10;
+}
 </style>
 </head>
 <body>
 
-<div id="ui">USDT: <span id="score">0</span></div>
-<canvas id="game"></canvas>
+<div id="ui">💰 USDT: <span id="score">0</span></div>
+<canvas id="c"></canvas>
 
 <script>
-const canvas = document.getElementById("game");
+const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
 function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
 }
-window.addEventListener("resize", resize);
+addEventListener("resize", resize);
 resize();
 
-// ===== PLAYER =====
+/* ===== STARS ===== */
+const stars = Array.from({length: 120}, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  r: Math.random() * 2 + 0.5,
+  s: Math.random() * 0.3 + 0.1
+}));
+
+/* ===== PLAYER ===== */
 const player = {
   x: canvas.width / 2,
   y: canvas.height / 2,
-  r: 18
+  r: 26
 };
 
-// ===== SCORE =====
+/* ===== SCORE ===== */
 let score = 0;
 const scoreEl = document.getElementById("score");
 
-// ===== COINS =====
+/* ===== COINS ===== */
 const coins = [];
 const types = [
-  { name: "USDT", color: "#00ff99", value: 1 },
-  { name: "BTC", color: "#ffcc00", value: 5 },
-  { name: "SOIL", color: "#9b59b6", value: 3 }
+  { color: "#00ff99", value: 1 },
+  { color: "#ffcc00", value: 5 },
+  { color: "#9b59b6", value: 3 }
 ];
 
 function spawnCoin() {
   const t = types[Math.floor(Math.random() * types.length)];
   coins.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    r: 8,
-    color: t.color,
-    value: t.value
-  });
-}
-
-setInterval(spawnCoin, 600);
-
-// ===== CONTROL =====
-canvas.addEventListener("mousemove", e => {
-  player.x = e.clientX;
-  player.y = e.clientY;
-});
-
-canvas.addEventListener("touchmove", e => {
-  const t = e.touches[0];
-  player.x = t.clientX;
-  player.y = t.clientY;
-});
-
-// ===== GAME LOOP =====
-function loop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // player glow
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, player.r + 6, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(0,255,153,0.15)";
-  ctx.fill();
-
-  // player
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
-  ctx.fillStyle = "#00ff99";
-  ctx.fill();
-
-  // coins
-  for (let i = coins.length - 1; i >= 0; i--) {
-    const c = coins[i];
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-    ctx.fillStyle = c.color;
-    ctx.fill();
-
-    const dx = player.x - c.x;
-    const dy = player.y - c.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < player.r + c.r) {
-      score += c.value;
-      scoreEl.textContent = score;
-      coins.splice(i, 1);
-    }
-  }
-
-  requestAnimationFrame(loop);
-}
-
-loop();
-</script>
-</body>
-</html>
+    x: Math.random(
