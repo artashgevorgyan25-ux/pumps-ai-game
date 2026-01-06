@@ -3,163 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>PUMPS AI — Pump to Infinity</title>
+    <title>PUMPS AI — Live Leaderboard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
-        :root {
-            --primary-green: #00ff88;
-            --bg-dark: #0a0a0a;
-        }
-
+        :root { --primary-green: #00ff88; }
         body {
-            margin: 0;
-            background: radial-gradient(circle at top, #1a1a1a, #000);
-            color: var(--primary-green);
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow-y: auto; /* Разрешаем прокрутку для списка лидеров */
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; background: radial-gradient(circle at top, #1a1a1a, #000);
+            color: var(--primary-green); font-family: 'Arial', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; user-select: none; -webkit-tap-highlight-color: transparent;
         }
-
-        /* Шапка с балансом */
-        .header-info {
-            margin-top: 40px;
-            text-align: center;
-        }
-
-        .score-value {
-            font-size: 64px;
-            font-weight: 900;
-            margin: 0;
-            text-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-        }
-
-        /* Контейнер для робота-тапалки */
-        .pump-container {
-            margin: 30px 0;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.05s ease-in-out;
-        }
-
-        .pump-container:active {
-            transform: scale(0.92); /* Эффект сжатия при клике */
-        }
-
-        .main-image {
-            max-width: 280px;
-            height: auto;
-            filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.2));
-        }
-
-        /* Кнопка */
-        .tap-button {
-            background: none;
-            border: 2px solid var(--primary-green);
-            color: var(--primary-green);
-            padding: 12px 35px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-            margin-bottom: 30px;
-        }
-
-        /* Стили Топа игроков */
+        .header-info { text-align: center; margin-top: 20px; }
+        .score-value { font-size: 56px; font-weight: 900; margin: 0; text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+        .pump-container { margin: 20px 0; cursor: pointer; transition: transform 0.05s; }
+        .pump-container:active { transform: scale(0.95); }
+        .main-image { max-width: 240px; filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.2)); }
+        
         .leaderboard {
-            width: 85%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 50px;
-            border: 1px solid rgba(0, 255, 136, 0.1);
-            backdrop-filter: blur(10px);
+            width: 90%; max-width: 380px; background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px; padding: 20px; border: 1px solid rgba(0, 255, 136, 0.1);
+            margin-bottom: 40px; box-sizing: border-box;
         }
-
-        .leaderboard h3 {
-            text-align: center;
-            margin-top: 0;
-            text-transform: uppercase;
-            font-size: 16px;
-            letter-spacing: 2px;
-        }
-
-        .player-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .player-item:last-child {
-            border-bottom: none;
-        }
-
-        .player-name { color: #fff; opacity: 0.9; }
-        .player-score { font-weight: bold; color: var(--primary-green); }
-
+        .leaderboard h3 { text-align: center; margin-top: 0; font-size: 18px; letter-spacing: 2px; }
+        .player-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .player-item:last-child { border-bottom: none; }
+        .player-name { color: white; font-weight: 500; }
+        .player-score { font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="header-info">
-        <p style="text-transform: uppercase; letter-spacing: 2px; margin: 0; opacity: 0.6; font-size: 12px;">Your Balance</p>
-        <h1 id="score" class="score-value">48</h1>
-        <p style="letter-spacing: 5px; margin: 5px 0; font-size: 14px;">PMPS</p>
+        <h1 id="score" class="score-value">0</h1>
+        <p style="letter-spacing: 3px; margin: 0; opacity: 0.8;">PMPS</p>
     </div>
 
     <div class="pump-container" onclick="handleTap()">
         <img src="pumps.png" alt="PUMP" class="main-image">
     </div>
 
-    <button class="tap-button" onclick="handleTap()">Tap to Pump 🚀</button>
-
     <div class="leaderboard">
-        <h3>Top Players</h3>
-        <div class="player-item">
-            <span class="player-name">1. CryptoBoss</span>
-            <span class="player-score">1,500,200</span>
-        </div>
-        <div class="player-item">
-            <span class="player-name">2. Web3_Master</span>
-            <span class="player-score">940,100</span>
-        </div>
-        <div class="player-item">
-            <span class="player-name">3. MoonWalker</span>
-            <span class="player-score">720,550</span>
-        </div>
-        <div class="player-item">
-            <span class="player-name">4. PumpRobot</span>
-            <span class="player-score">450,000</span>
-        </div>
+        <h3>TOP PLAYERS</h3>
+        <div id="leaderboard-list">Загрузка данных...</div>
     </div>
 
     <script>
-        let currentScore = 48;
+        // Конфигурация вашего Firebase из скриншота
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-LCDCniwJD1Ipsbn99quDh7gaS8KJ4Ks",
+            authDomain: "pumpsai-fd0c2.firebaseapp.com",
+            projectId: "pumpsai-fd0c2",
+            databaseURL: "https://pumpsai-fd0c2-default-rtdb.firebaseio.com",
+            storageBucket: "pumpsai-fd0c2.firebasestorage.app",
+            messagingSenderId: "1037380853686",
+            appId: "1:1037380853686:web:cbdb72335c33cb418eb17"
+        };
+
+        // Инициализация
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Получаем данные игрока из Telegram
+        const user = tg.initDataUnsafe?.user || { id: 'test_' + Math.floor(Math.random()*1000), first_name: 'Игрок' };
+        
+        let score = 0;
         const scoreElement = document.getElementById('score');
 
-        // Инициализация Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
-
-        function handleTap() {
-            // Увеличиваем счет
-            currentScore++;
-            scoreElement.innerText = currentScore;
-
-            // Вибрация (работает в Telegram на смартфонах)
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
+        // 1. Загружаем текущий результат игрока
+        db.ref('users/' + user.id).on('value', (snap) => {
+            if(snap.val()) {
+                score = snap.val().score;
+                scoreElement.innerText = score;
             }
+        });
+
+        // 2. Функция тапа (сохранение в реальном времени)
+        function handleTap() {
+            score++;
+            scoreElement.innerText = score;
+            
+            // Сохраняем имя и очки в Firebase
+            db.ref('users/' + user.id).set({
+                name: user.first_name,
+                score: score
+            });
+
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
+
+        // 3. Отображение ТОП-10 реальных игроков
+        db.ref('users').orderByChild('score').limitToLast(10).on('value', (snap) => {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            let players = [];
+            snap.forEach(child => { players.push(child.val()); });
+            
+            // Сортировка от большего к меньшему
+            players.reverse().forEach((p, i) => {
+                list.innerHTML += `
+                    <div class="player-item">
+                        <span class="player-name">${i+1}. ${p.name}</span>
+                        <span class="player-score">${p.score.toLocaleString()}</span>
+                    </div>`;
+            });
+        });
     </script>
 </body>
 </html>
