@@ -1,142 +1,82 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>PUMPS AI — Pump to Infinity</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>PUMPS AI — Pump to Infinity</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: #00ff88;
+    }
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  background: black;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-}
+    #hud {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      z-index: 10;
+    }
 
-#ui {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  color: #00ff99;
-  font-size: 20px;
-  font-weight: bold;
-  z-index: 10;
-}
-
-canvas {
-  display: block;
-}
-</style>
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
 
-<div id="ui">USDT: <span id="score">0</span></div>
+<div id="hud">USDT: <span id="score">0</span></div>
 <canvas id="game"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let score = 0;
+
+// загружаем картинку PUMPS AI
+const pumps = new Image();
+pumps.src = "pumps-ai.png";
+
+const player = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  size: 120,
+  vx: 2,
+  vy: 2
+};
+
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-resize();
 window.addEventListener("resize", resize);
 
-let score = 0;
-const scoreEl = document.getElementById("score");
-
-const mouse = {
-  x: canvas.width / 2,
-  y: canvas.height / 2
-};
-
-window.addEventListener("mousemove", e => {
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
-  score++;
-  scoreEl.textContent = score;
+canvas.addEventListener("click", () => {
+  score += 1;
+  document.getElementById("score").textContent = score;
+  player.vx *= 1.05;
+  player.vy *= 1.05;
 });
 
-/* IMAGE */
-const pumpImg = new Image();
-let imgLoaded = false;
-pumpImg.src = "pumps-ai.png";
-pumpImg.onload = () => imgLoaded = true;
-
-/* PLAYER */
-const pump = {
-  x: mouse.x,
-  y: mouse.y,
-  size: 80
-};
-
-/* PARTICLES */
-const particles = [];
-
-function addParticle() {
-  particles.push({
-    x: pump.x,
-    y: pump.y,
-    vx: (Math.random() - 0.5) * 3,
-    vy: (Math.random() - 0.5) * 3,
-    life: 60
-  });
+function drawGlow() {
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = "#00ff88";
 }
 
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-}
-
-function drawParticles() {
-  ctx.fillStyle = "#00ff99";
-  particles.forEach(p => ctx.fillRect(p.x, p.y, 2, 2));
-}
-
-function animate() {
+function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  pump.x += (mouse.x - pump.x) * 0.15;
-  pump.y += (mouse.y - pump.y) * 0.15;
+  player.x += player.vx;
+  player.y += player.vy;
 
-  ctx.shadowColor = "#00ff99";
-  ctx.shadowBlur = 25;
-
-  if (imgLoaded) {
-    ctx.drawImage(
-      pumpImg,
-      pump.x - pump.size / 2,
-      pump.y - pump.size / 2,
-      pump.size,
-      pump.size
-    );
-  } else {
-    // fallback — неоновый круг
-    ctx.beginPath();
-    ctx.arc(pump.x, pump.y, pump.size / 2, 0, Math.PI * 2);
-    ctx.fillStyle = "#00ff99";
-    ctx.fill();
+  if (player.x < player.size/2 || player.x > canvas.width - player.size/2) {
+    player.vx *= -1;
   }
-
-  ctx.shadowBlur = 0;
-
-  addParticle();
-  updateParticles();
-  drawParticles();
-
-  requestAnimationFrame(animate);
-}
-
-animate();
-</script>
-
-</body>
-</html>
+  if (player.y < player.size/2 || pl
