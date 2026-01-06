@@ -1,92 +1,77 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>PUMPS AI — Pump to Infinity</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>PUMPS AI</title>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  background: black;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-}
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-#ui {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  color: #00ff99;
-  font-size: 22px;
-  font-weight: bold;
-  z-index: 10;
-}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-canvas {
-  display: block;
-}
-</style>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      touch-action: manipulation;
+      font-family: Arial, sans-serif;
+    }
+
+    #balance {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: #00ff88;
+      font-size: 18px;
+      z-index: 10;
+    }
+
+    #pump {
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="ui">USDT: <span id="score">0</span></div>
-<canvas id="game"></canvas>
+  <div id="balance">USDT: 0</div>
+  <img id="pump" src="pumps-ai.png" />
 
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+  <script>
+    // Telegram init
+    if (window.Telegram && Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+    }
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resize);
-resize();
+    let balance = 0;
+    const balanceEl = document.getElementById("balance");
+    const pump = document.getElementById("pump");
 
-let score = 0;
-const scoreEl = document.getElementById("score");
+    function tap() {
+      balance++;
+      balanceEl.innerText = "USDT: " + balance;
 
-let x = canvas.width / 2;
-let y = canvas.height / 2;
-const size = 140;
+      pump.style.transform = "translate(-50%, -50%) scale(0.9)";
+      setTimeout(() => {
+        pump.style.transform = "translate(-50%, -50%) scale(1)";
+      }, 80);
+    }
 
-/* === LOAD IMAGE CORRECTLY === */
-const pumpImg = new Image();
-pumpImg.src = "pumps-ai.png";
-
-pumpImg.onload = () => {
-  requestAnimationFrame(draw);
-};
-
-/* === INPUT === */
-window.addEventListener("mousemove", e => {
-  x = e.clientX;
-  y = e.clientY;
-});
-
-window.addEventListener("click", () => {
-  score++;
-  scoreEl.textContent = score;
-});
-
-/* === DRAW LOOP === */
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.drawImage(
-    pumpImg,
-    x - size / 2,
-    y - size / 2,
-    size,
-    size
-  );
-
-  requestAnimationFrame(draw);
-}
-</script>
+    pump.addEventListener("click", tap);
+    pump.addEventListener("touchstart", tap);
+  </script>
 
 </body>
 </html>
