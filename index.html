@@ -2,135 +2,164 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>PUMPS AI - Live Leaderboard</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUMPS AI - Game</title>
     <style>
-        :root { --primary-green: #00ff88; }
+        /* CSS: Стили оформления */
         body {
-            margin: 0; background: radial-gradient(circle at top, #1a1a1a, #000);
-            color: var(--primary-green); font-family: 'Arial', sans-serif;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; user-select: none; -webkit-tap-highlight-color: transparent;
+            background-color: #0a0a0a;
+            color: #00ff88;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
-        .header-info { text-align: center; margin-top: 20px; }
-        .score-value { font-size: 56px; font-weight: 900; margin: 0; text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
-        .pump-container { margin: 20px 0; cursor: pointer; transition: transform 0.05s; }
-        .pump-container:active { transform: scale(0.95); }
-        .main-image { max-width: 240px; filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.2)); }
 
-        .leaderboard {
-            width: 90%; max-width: 380px; background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px; padding: 20px; border: 1px solid rgba(0, 255, 136, 0.1);
-            margin-bottom: 40px; box-sizing: border-box;
+        .score-container {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .leaderboard h3 { text-align: center; margin-top: 0; font-size: 18px; letter-spacing: 2px; }
-        .player-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .player-item:last-child { border-bottom: none; }
-        .player-name { color: white; font-weight: 500; }
-        .player-score { font-weight: bold; }
-        
-        /* Состояние загрузки */
-        .loading { opacity: 0.5; pointer-events: none; }
+
+        #score {
+            font-size: 80px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .label {
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        /* Кнопка-тапалка */
+        .pump-area {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(145deg, #121212, #1a1a1a);
+            border-radius: 20px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.3s;
+            user-select: none; /* Чтобы не выделялся текст при тапах */
+        }
+
+        .pump-area:active {
+            transform: scale(0.95);
+            border-color: #00ff88;
+        }
+
+        .robot-icon {
+            font-size: 100px;
+            margin-bottom: 10px;
+        }
+
+        .pump-button-ui {
+            background: #00ff88;
+            color: #000;
+            padding: 10px 40px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Таблица лидеров */
+        .leaderboard {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .leaderboard h3 {
+            margin-top: 0;
+            color: #00ff88;
+            font-size: 16px;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header-info">
-        <h1 id="score" class="score-value">0</h1>
-        <p style="letter-spacing: 3px; margin: 0; opacity: 0.8;">PUMPS</p>
+    <div class="score-container">
+        <p id="score">0</p>
+        <p class="label">Pumps</p>
     </div>
 
-    <div class="pump-container" id="pump-btn" onclick="handleTap()">
-        <img src="pumps.png" alt="PUMP" class="main-image">
+    <div class="pump-area" id="pumpClicker">
+        <div class="robot-icon">🤖</div>
+        <div class="pump-button-ui">PUMP</div>
+        <p style="font-size: 10px; margin-top: 15px;">TAP TO PUMP 🚀</p>
     </div>
 
     <div class="leaderboard">
         <h3>TOP PLAYERS</h3>
-        <div id="leaderboard-list">Загрузка данных...</div>
+        <p class="status" id="loadingStatus">Загрузка данных...</p>
     </div>
 
     <script>
-        // Конфигурация Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-LCDcniwJD1Ipsbn99quDh7gaS8KJ4Ks",
-            authDomain: "pumpsai-fd0c2.firebaseapp.com",
-            projectId: "pumpsai-fd0c2",
-            databaseURL: "https://pumpsai-fd0c2-default-rtdb.firebaseio.com",
-            storageBucket: "pumpsai-fd0c2.appspot.com",
-            messagingSenderId: "1037380853686",
-            appId: "1:1037380853686:web:cbdb72335c33cb418eb17"
-        };
-
-        // Инициализация
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Данные пользователя
-        const user = tg.initDataUnsafe?.user || { id: 'test_' + Math.floor(Math.random()*1000), first_name: 'Игрок' };
-        
-        let score = 0;
-        let isLoaded = false; // Блокировка до загрузки данных
+        // JS: Логика игры
+        let count = 0;
         const scoreElement = document.getElementById('score');
-        const pumpBtn = document.getElementById('pump-btn');
+        const clickerElement = document.getElementById('pumpClicker');
+        const statusElement = document.getElementById('loadingStatus');
 
-        // Добавляем визуальный эффект загрузки
-        pumpBtn.classList.add('loading');
+        // Функция обработки клика
+        clickerElement.addEventListener('click', (event) => {
+            // Увеличиваем счет
+            count++;
+            scoreElement.innerText = count;
 
-        // 1. ЗАГРУЗКА ДАННЫХ ПРИ СТАРТЕ
-        db.ref('users/' + user.id).once('value').then((snap) => {
-            if (snap.exists()) {
-                score = snap.val().score || 0;
-                scoreElement.innerText = score;
+            // Эффект вибрации (для мобильных)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
             }
-            isLoaded = true;
-            pumpBtn.classList.remove('loading');
+
+            // Можно добавить создание вылетающих цифр "+1"
+            createFloatingText(event.clientX, event.clientY);
         });
 
-        // 2. ФУНКЦИЯ ТАПА
-        function handleTap() {
-            if (!isLoaded) return; // Не даем кликать, пока не узнали текущий счет
+        // Функция для красоты (вылетающий текст +1)
+        function createFloatingText(x, y) {
+            const plus = document.createElement('div');
+            plus.innerText = '+1';
+            plus.style.position = 'fixed';
+            plus.style.left = x + 'px';
+            plus.style.top = y + 'px';
+            plus.style.color = '#00ff88';
+            plus.style.fontWeight = 'bold';
+            plus.style.pointerEvents = 'none';
+            plus.style.transition = 'all 0.5s ease-out';
+            document.body.appendChild(plus);
 
-            score++;
-            scoreElement.innerText = score;
+            setTimeout(() => {
+                plus.style.transform = 'translateY(-50px)';
+                plus.style.opacity = '0';
+            }, 10);
 
-            // Мгновенное сохранение в базу
-            db.ref('users/' + user.id).set({
-                name: user.first_name,
-                score: score
-            });
-
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
+            setTimeout(() => plus.remove(), 500);
         }
 
-        // 3. ОБНОВЛЕНИЕ ТАБЛИЦЫ ЛИДЕРОВ В РЕАЛЬНОМ ВРЕМЕНИ
-        db.ref('users').orderByChild('score').limitToLast(10).on('value', (snap) => {
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = '';
-            
-            let players = [];
-            snap.forEach(child => {
-                players.push(child.val());
-            });
-
-            // Сортировка (Firebase возвращает по возрастанию, делаем реверс)
-            players.reverse().forEach((p, i) => {
-                const item = document.createElement('div');
-                item.className = 'player-item';
-                item.innerHTML = `
-                    <span class="player-name">${i + 1}. ${p.name}</span>
-                    <span class="player-score">${p.score.toLocaleString()}</span>
-                `;
-                list.appendChild(item);
-            });
-        });
+        // Имитация загрузки данных (как на вашем скриншоте)
+        setTimeout(() => {
+            statusElement.innerText = "Сервер подключен. Удачи!";
+        }, 2000);
     </script>
 </body>
 </html>
