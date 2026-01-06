@@ -1,149 +1,81 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PUMPS AI — Pump to Infinity</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root {
-      --primary-green: #00ff88;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PUMPS AI — Pump to Infinity</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary-green: #00ff88;
+        }
 
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top, #1a1a1a, #000);
-      color: var(--primary-green);
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
+        body {
+            margin: 0;
+            background: radial-gradient(circle at top, #1a1a1a, #000);
+            color: var(--primary-green);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .header-info {
-      position: absolute;
-      top: 60px;
-      text-align: center;
-    }
+        /* Контейнер для картинки-тапалки */
+        .pump-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s active;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .score-value {
-      font-size: 64px;
-      font-weight: 900;
-      margin: 0;
-      text-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
-    }
+        .pump-container:active {
+            transform: scale(0.95); /* Эффект нажатия */
+        }
 
-    .currency-label {
-      font-size: 20px;
-      letter-spacing: 5px;
-      opacity: 0.9;
-      font-weight: bold;
-    }
+        .main-image {
+            max-width: 80%; /* Размер картинки на экране */
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+        }
 
-    .main-tap-area {
-      position: relative;
-      cursor: pointer;
-    }
-
-    .hero-img {
-      width: 280px;
-      height: auto;
-      filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.4));
-      transition: transform 0.05s ease;
-    }
-
-    .hero-img:active {
-      transform: scale(0.92);
-    }
-
-    .tap-instruction {
-      margin-top: 30px;
-      font-size: 18px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      animation: pulseAnim 2s infinite;
-    }
-
-    @keyframes pulseAnim {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
-    }
-
-    .plus-one {
-      position: absolute;
-      color: #fff;
-      font-weight: 900;
-      font-size: 36px;
-      pointer-events: none;
-      animation: floatEffect 0.8s ease-out forwards;
-      z-index: 100;
-    }
-
-    @keyframes floatEffect {
-      0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-180px) scale(1.3); opacity: 0; }
-    }
-  </style>
+        .score-value {
+            font-size: 64px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
+        }
+    </style>
 </head>
 <body>
 
-  <div class="header-info">
-    <div style="font-size: 14px; opacity: 0.6;">TOTAL BALANCE</div>
-    <div class="score-value" id="score">0</div>
-    <div class="currency-label">PMPS</div>
-  </div>
+    <div class="header-info" style="position: absolute; top: 60px; text-align: center;">
+        <p style="text-transform: uppercase; letter-spacing: 2px; margin: 0; opacity: 0.8;">Balance</p>
+        <h1 class="score-value">48</h1>
+        <p style="letter-spacing: 5px; margin: 5px 0;">PMPS</p>
+    </div>
 
-  <div class="main-tap-area" id="tapZone">
-    <img src="pumps.png" alt="PUMPS AI" class="hero-img" />
-  </div>
+    <div class="pump-container" onclick="handleTap()">
+        <img src="pumps.png" alt="PUMP IT" class="main-image">
+    </div>
 
-  <div class="tap-instruction">TAP TO PUMP 🚀</div>
+    <div style="position: absolute; bottom: 80px; text-align: center;">
+        <button style="background: none; border: 2px solid var(--primary-green); color: var(--primary-green); padding: 15px 40px; border-radius: 50px; font-size: 20px; font-weight: bold; cursor: pointer; text-transform: uppercase;">
+            Tap to Pump 🚀
+        </button>
+    </div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    // Загружаем прогресс (используем новый ключ для PMPS)
-    let count = localStorage.getItem('pmps_balance') ? parseInt(localStorage.getItem('pmps_balance')) : 0;
-    const scoreDisplay = document.getElementById('score');
-    const tapZone = document.getElementById('tapZone');
-
-    scoreDisplay.textContent = count.toLocaleString();
-
-    function doTap(e) {
-      count++;
-      scoreDisplay.textContent = count.toLocaleString();
-      localStorage.setItem('pmps_balance', count);
-
-      // Вибрация в Telegram
-      if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('medium');
-      }
-
-      // Эффект +1
-      const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-      const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-      
-      const p = document.createElement('div');
-      p.className = 'plus-one';
-      p.textContent = '+1';
-      p.style.left = (x - 20) + 'px';
-      p.style.top = (y - 40) + 'px';
-      document.body.appendChild(p);
-      
-      setTimeout(() => p.remove(), 800);
-    }
-
-    // Поддержка всех типов нажатий
-    tapZone.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      doTap(e);
-    });
-  </script>
+    <script>
+        function handleTap() {
+            // Простая логика анимации или звука при тапе
+            console.log("Tap!");
+        }
+    </script>
 </body>
 </html>
