@@ -29,23 +29,24 @@ const config = {
 
 new Phaser.Game(config);
 
-function preload() {}
+function preload() {
+    this.load.image("pumps", "pumps-ai.png");
+}
 
 function create() {
-    player = this.physics.add.rectangle(180, 520, 40, 40, 0x00ffcc);
-    player.body.setCollideWorldBounds(true);
+    player = this.physics.add.sprite(180, 520, "pumps");
+    player.setScale(0.25);
+    player.setCollideWorldBounds(true);
 
     coins = this.physics.add.group();
     for (let i = 0; i < 6; i++) {
         let coin = coins.create(
             Phaser.Math.Between(20, 340),
-            Phaser.Math.Between(-200, 0),
-            null
+            Phaser.Math.Between(-300, 0),
+            "pumps"
         );
-        coin.setSize(20, 20);
-        coin.setDisplaySize(20, 20);
+        coin.setScale(0.15);
         coin.setVelocityY(Phaser.Math.Between(80, 140));
-        coin.setTint(0xffd700);
     }
 
     scoreText = this.add.text(10, 10, "USDT: 0", {
@@ -63,14 +64,14 @@ function update() {
 
     coins.children.iterate(c => {
         if (c.y > 700) {
-            c.y = -20;
+            c.y = -50;
             c.x = Phaser.Math.Between(20, 340);
         }
     });
 }
 
 function collect(player, coin) {
-    coin.y = -20;
+    coin.y = -50;
     coin.x = Phaser.Math.Between(20, 340);
     score++;
     scoreText.setText("USDT: " + score);
