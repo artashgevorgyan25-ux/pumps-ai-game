@@ -8,6 +8,7 @@
     <style>
         :root {
             --primary-green: #00ff88;
+            --bg-dark: #0a0a0a;
         }
 
         body {
@@ -17,32 +18,17 @@
             font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
+            overflow-y: auto; /* Разрешаем прокрутку для списка лидеров */
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Контейнер для картинки-тапалки */
-        .pump-container {
-            position: relative;
-            cursor: pointer;
-            transition: transform 0.1s active;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .pump-container:active {
-            transform: scale(0.95); /* Эффект нажатия */
-        }
-
-        .main-image {
-            max-width: 80%; /* Размер картинки на экране */
-            height: auto;
-            filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+        /* Шапка с балансом */
+        .header-info {
+            margin-top: 40px;
+            text-align: center;
         }
 
         .score-value {
@@ -51,30 +37,128 @@
             margin: 0;
             text-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
         }
+
+        /* Контейнер для робота-тапалки */
+        .pump-container {
+            margin: 30px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.05s ease-in-out;
+        }
+
+        .pump-container:active {
+            transform: scale(0.92); /* Эффект сжатия при клике */
+        }
+
+        .main-image {
+            max-width: 280px;
+            height: auto;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.2));
+        }
+
+        /* Кнопка */
+        .tap-button {
+            background: none;
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+            margin-bottom: 30px;
+        }
+
+        /* Стили Топа игроков */
+        .leaderboard {
+            width: 85%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 50px;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .leaderboard h3 {
+            text-align: center;
+            margin-top: 0;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .player-item:last-child {
+            border-bottom: none;
+        }
+
+        .player-name { color: #fff; opacity: 0.9; }
+        .player-score { font-weight: bold; color: var(--primary-green); }
+
     </style>
 </head>
 <body>
 
-    <div class="header-info" style="position: absolute; top: 60px; text-align: center;">
-        <p style="text-transform: uppercase; letter-spacing: 2px; margin: 0; opacity: 0.8;">Balance</p>
-        <h1 class="score-value">48</h1>
-        <p style="letter-spacing: 5px; margin: 5px 0;">PMPS</p>
+    <div class="header-info">
+        <p style="text-transform: uppercase; letter-spacing: 2px; margin: 0; opacity: 0.6; font-size: 12px;">Your Balance</p>
+        <h1 id="score" class="score-value">48</h1>
+        <p style="letter-spacing: 5px; margin: 5px 0; font-size: 14px;">PMPS</p>
     </div>
 
     <div class="pump-container" onclick="handleTap()">
-        <img src="pumps.png" alt="PUMP IT" class="main-image">
+        <img src="pumps.png" alt="PUMP" class="main-image">
     </div>
 
-    <div style="position: absolute; bottom: 80px; text-align: center;">
-        <button style="background: none; border: 2px solid var(--primary-green); color: var(--primary-green); padding: 15px 40px; border-radius: 50px; font-size: 20px; font-weight: bold; cursor: pointer; text-transform: uppercase;">
-            Tap to Pump 🚀
-        </button>
+    <button class="tap-button" onclick="handleTap()">Tap to Pump 🚀</button>
+
+    <div class="leaderboard">
+        <h3>Top Players</h3>
+        <div class="player-item">
+            <span class="player-name">1. CryptoBoss</span>
+            <span class="player-score">1,500,200</span>
+        </div>
+        <div class="player-item">
+            <span class="player-name">2. Web3_Master</span>
+            <span class="player-score">940,100</span>
+        </div>
+        <div class="player-item">
+            <span class="player-name">3. MoonWalker</span>
+            <span class="player-score">720,550</span>
+        </div>
+        <div class="player-item">
+            <span class="player-name">4. PumpRobot</span>
+            <span class="player-score">450,000</span>
+        </div>
     </div>
 
     <script>
+        let currentScore = 48;
+        const scoreElement = document.getElementById('score');
+
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
         function handleTap() {
-            // Простая логика анимации или звука при тапе
-            console.log("Tap!");
+            // Увеличиваем счет
+            currentScore++;
+            scoreElement.innerText = currentScore;
+
+            // Вибрация (работает в Telegram на смартфонах)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
         }
     </script>
 </body>
