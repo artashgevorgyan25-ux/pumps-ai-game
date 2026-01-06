@@ -24,7 +24,7 @@
             touch-action: none;
         }
 
-        /* КНОПКА ЗВУКА */
+        /* Кнопка управления звуком */
         #muteBtn {
             position: fixed;
             top: 20px;
@@ -42,10 +42,7 @@
             font-size: 26px;
             z-index: 10000;
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-            transition: transform 0.2s;
         }
-
-        #muteBtn:active { transform: scale(0.9); }
 
         .score-container {
             text-align: center;
@@ -57,7 +54,6 @@
             font-size: 85px;
             font-weight: bold;
             margin: 0;
-            color: #00FF88;
         }
 
         .pump-area {
@@ -73,7 +69,6 @@
             justify-content: center;
             cursor: pointer;
             backdrop-filter: blur(12px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
         }
 
         .robot-icon {
@@ -91,18 +86,6 @@
             border-radius: 10px;
             font-weight: bold;
             margin-top: 10px;
-            text-transform: uppercase;
-        }
-
-        .leaderboard {
-            margin-top: 25px;
-            background: rgba(255, 255, 255, 0.07);
-            backdrop-filter: blur(10px);
-            padding: 18px;
-            border-radius: 22px;
-            width: 270px;
-            text-align: center;
-            border: 1px solid rgba(0, 255, 136, 0.25);
         }
 
         .floating-text {
@@ -112,7 +95,6 @@
             font-size: 28px;
             pointer-events: none;
             animation: floatUp 0.7s ease-out forwards;
-            text-shadow: 0 0 10px #000;
         }
 
         @keyframes floatUp {
@@ -139,11 +121,6 @@
         <div class="pump-button-ui">TAP TO PUMP 🚀</div>
     </div>
 
-    <div class="leaderboard">
-        <h3 style="margin:0; font-size: 17px; letter-spacing: 1px;">TOP PLAYERS</h3>
-        <p id="loadingStatus" style="font-size: 13px; color: #aaa;">Синхронизация...</p>
-    </div>
-
     <script>
         let count = parseInt(localStorage.getItem('user_pumps_score')) || 0;
         let isMuted = true; 
@@ -155,31 +132,38 @@
 
         scoreElement.innerText = count;
 
+        // Попытка запустить аудио
+        function tryPlayMusic() {
+            if (!isMuted && music.paused) {
+                music.play().catch(e => console.log("Браузер всё ещё блокирует звук"));
+            }
+        }
+
         // Переключатель звука
         muteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (music.paused) {
+            if (isMuted) {
+                isMuted = false;
                 music.play().then(() => {
-                    isMuted = false;
                     muteBtn.innerText = "🔊";
                     muteBtn.style.background = "#fff";
-                }).catch(err => console.log("Нажмите еще раз"));
+                }).catch(() => {
+                    // Если сразу не вышло, включим при клике по роботу
+                    muteBtn.innerText = "🔊";
+                    muteBtn.style.background = "#fff";
+                });
             } else {
-                music.pause();
                 isMuted = true;
+                music.pause();
                 muteBtn.innerText = "🔈";
                 muteBtn.style.background = "#00FF88";
             }
         });
 
-        // Клик по роботу
         clicker.addEventListener('pointerdown', (e) => {
             if (e.cancelable) e.preventDefault();
             
-            // Пытаемся включить музыку при первом же клике, если не в муте
-            if (!isMuted && music.paused) {
-                music.play();
-            }
+            tryPlayMusic(); // Пробуем включить при каждом тапе
 
             count++;
             scoreElement.innerText = count;
@@ -201,12 +185,6 @@
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 700);
         }
-
-        setTimeout(() => {
-            const status = document.getElementById('loadingStatus');
-            status.innerText = "Данные синхронизированы ✅";
-            status.style.color = "#00FF88";
-        }, 1500);
     </script>
 </body>
 </html>
