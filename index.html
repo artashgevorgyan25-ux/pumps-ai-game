@@ -36,7 +36,6 @@ canvas {
 <canvas id="game"></canvas>
 
 <script>
-/* === CANVAS === */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -47,26 +46,27 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
-/* === SCORE === */
 let score = 0;
 const scoreEl = document.getElementById("score");
 
-/* === IMAGE === */
+let x = canvas.width / 2;
+let y = canvas.height / 2;
+const size = 140;
+
+/* === LOAD IMAGE CORRECTLY === */
 const pumpImg = new Image();
 pumpImg.src = "pumps-ai.png";
 
-/* === POSITION === */
-let x = canvas.width / 2;
-let y = canvas.height / 2;
-const size = 120;
+pumpImg.onload = () => {
+  requestAnimationFrame(draw);
+};
 
-/* === MOUSE MOVE === */
-window.addEventListener("mousemove", (e) => {
+/* === INPUT === */
+window.addEventListener("mousemove", e => {
   x = e.clientX;
   y = e.clientY;
 });
 
-/* === CLICK === */
 window.addEventListener("click", () => {
   score++;
   scoreEl.textContent = score;
@@ -76,20 +76,16 @@ window.addEventListener("click", () => {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (pumpImg.complete) {
-    ctx.drawImage(
-      pumpImg,
-      x - size / 2,
-      y - size / 2,
-      size,
-      size
-    );
-  }
+  ctx.drawImage(
+    pumpImg,
+    x - size / 2,
+    y - size / 2,
+    size,
+    size
+  );
 
   requestAnimationFrame(draw);
 }
-
-draw();
 </script>
 
 </body>
