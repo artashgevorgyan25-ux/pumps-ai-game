@@ -1,121 +1,125 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>PUMPS AI — Pump To Infinity</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      color: #00ff99;
-    }
-
-    #ui {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
-      font-size: 18px;
-    }
-
-    canvas {
-      display: block;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>PUMPS AI — Pump To Infinity</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+  }
+  #ui {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    color: #00ff99;
+    font-size: 20px;
+    z-index: 10;
+  }
+</style>
 </head>
 <body>
 
 <div id="ui">USDT: <span id="score">0</span></div>
-
 <canvas id="game"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
 
-let score = 0;
-
-const pumpImg = new Image();
-pumpImg.src = "pumps-ai.png";
-
+// ===== PLAYER =====
 const player = {
   x: canvas.width / 2,
   y: canvas.height / 2,
-  size: 80,
-  speed: 5
+  r: 18
 };
 
+// ===== SCORE =====
+let score = 0;
+const scoreEl = document.getElementById("score");
+
+// ===== COINS =====
 const coins = [];
+const types = [
+  { name: "USDT", color: "#00ff99", value: 1 },
+  { name: "BTC", color: "#ffcc00", value: 5 },
+  { name: "SOIL", color: "#9b59b6", value: 3 }
+];
 
 function spawnCoin() {
+  const t = types[Math.floor(Math.random() * types.length)];
   coins.push({
-    x: Math.random() * (canvas.width - 40),
-    y: Math.random() * (canvas.height - 40),
-    size: 30
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: 8,
+    color: t.color,
+    value: t.value
   });
 }
 
-for (let i = 0; i < 10; i++) spawnCoin();
+setInterval(spawnCoin, 600);
 
-const keys = {};
-window.addEventListener("keydown", e => keys[e.key] = true);
-window.addEventListener("keyup", e => keys[e.key] = false);
+// ===== CONTROL =====
+canvas.addEventListener("mousemove", e => {
+  player.x = e.clientX;
+  player.y = e.clientY;
+});
 
-function update() {
-  if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
-  if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
-  if (keys["ArrowLeft"] || keys["a"]) player.x -= player.speed;
-  if (keys["ArrowRight"] || keys["d"]) player.x += player.speed;
+canvas.addEventListener("touchmove", e => {
+  const t = e.touches[0];
+  player.x = t.clientX;
+  player.y = t.clientY;
+});
 
-  coins.forEach((coin, i) => {
-    const dx = player.x - coin.x;
-    const dy = player.y - coin.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < player.size / 2 + coin.size / 2) {
-      coins.splice(i, 1);
-      score += 10;
-      document.getElementById("score").textContent = score;
-      spawnCoin();
-    }
-  });
-}
-
-function draw() {
+// ===== GAME LOOP =====
+function loop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // player (PUMPS AI)
-  ctx.drawImage(
-    pumpImg,
-    player.x - player.size / 2,
-    player.y - player.size / 2,
-    player.size,
-    player.size
-  );
+  // player glow
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.r + 6, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0,255,153,0.15)";
+  ctx.fill();
+
+  // player
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+  ctx.fillStyle = "#00ff99";
+  ctx.fill();
 
   // coins
-  coins.forEach(coin => {
+  for (let i = coins.length - 1; i >= 0; i--) {
+    const c = coins[i];
     ctx.beginPath();
-    ctx.arc(coin.x, coin.y, coin.size / 2, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffd700";
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.fillStyle = c.color;
     ctx.fill();
-  });
-}
 
-function loop() {
-  update();
-  draw();
+    const dx = player.x - c.x;
+    const dy = player.y - c.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < player.r + c.r) {
+      score += c.value;
+      scoreEl.textContent = score;
+      coins.splice(i, 1);
+    }
+  }
+
   requestAnimationFrame(loop);
 }
 
-pumpImg.onload = loop;
+loop();
 </script>
-
 </body>
 </html>
