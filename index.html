@@ -7,14 +7,13 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --primary-color: #00ff88;
-      --bg-color: #0b0b0b;
+      --primary-green: #00ff88;
     }
 
     body {
       margin: 0;
       background: radial-gradient(circle at top, #1a1a1a, #000);
-      color: var(--primary-color);
+      color: var(--primary-green);
       font-family: 'Arial', sans-serif;
       display: flex;
       flex-direction: column;
@@ -26,125 +25,124 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .status-bar {
+    .header-info {
       position: absolute;
-      top: 50px;
+      top: 60px;
       text-align: center;
     }
 
-    .counter {
-      font-size: 56px;
+    .score-value {
+      font-size: 64px;
       font-weight: 900;
       margin: 0;
-      text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+      text-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
     }
 
-    .label {
-      font-size: 16px;
-      letter-spacing: 4px;
-      opacity: 0.8;
-      text-transform: uppercase;
-      margin: 5px 0;
+    .currency-label {
+      font-size: 20px;
+      letter-spacing: 5px;
+      opacity: 0.9;
+      font-weight: bold;
     }
 
-    .main-btn-container {
+    .main-tap-area {
       position: relative;
-      margin: 40px 0;
+      cursor: pointer;
     }
 
-    .pump-img {
+    .hero-img {
       width: 280px;
       height: auto;
-      cursor: pointer;
+      filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.4));
       transition: transform 0.05s ease;
-      filter: drop-shadow(0 0 25px rgba(0, 255, 136, 0.3));
     }
 
-    .pump-img:active {
-      transform: scale(0.94);
+    .hero-img:active {
+      transform: scale(0.92);
     }
 
-    .tap-hint {
-      margin-top: 20px;
+    .tap-instruction {
+      margin-top: 30px;
       font-size: 18px;
-      opacity: 0.7;
       font-weight: bold;
-      animation: pulse 1.5s infinite;
+      letter-spacing: 1px;
+      animation: pulseAnim 2s infinite;
     }
 
-    @keyframes pulse {
+    @keyframes pulseAnim {
       0%, 100% { opacity: 0.4; }
       50% { opacity: 1; }
     }
 
-    .particle {
+    .plus-one {
       position: absolute;
       color: #fff;
-      font-weight: bold;
-      font-size: 32px;
+      font-weight: 900;
+      font-size: 36px;
       pointer-events: none;
-      animation: floatUp 0.7s ease-out forwards;
+      animation: floatEffect 0.8s ease-out forwards;
       z-index: 100;
     }
 
-    @keyframes floatUp {
+    @keyframes floatEffect {
       0% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-160px) scale(1.2); opacity: 0; }
+      100% { transform: translateY(-180px) scale(1.3); opacity: 0; }
     }
   </style>
 </head>
 <body>
 
-  <div class="status-bar">
-    <div class="label">BALANCE</div>
-    <div class="counter" id="score">0</div>
-    <div class="label">PMPS</div> 
+  <div class="header-info">
+    <div style="font-size: 14px; opacity: 0.6;">TOTAL BALANCE</div>
+    <div class="score-value" id="score">0</div>
+    <div class="currency-label">PMPS</div>
   </div>
 
-  <div class="main-btn-container">
-    <img src="pumps.png" alt="PUMP" class="pump-img" id="clickBtn" />
+  <div class="main-tap-area" id="tapZone">
+    <img src="pumps.png" alt="PUMPS AI" class="hero-img" />
   </div>
 
-  <div class="tap-hint">TAP TO PUMP 🚀</div>
+  <div class="tap-instruction">TAP TO PUMP 🚀</div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Загрузка счета
-    let score = localStorage.getItem('pumps_ai_score_v2') ? parseInt(localStorage.getItem('pumps_ai_score_v2')) : 0;
-    const scoreEl = document.getElementById('score');
-    const clickBtn = document.getElementById('clickBtn');
+    // Загружаем прогресс (используем новый ключ для PMPS)
+    let count = localStorage.getItem('pmps_balance') ? parseInt(localStorage.getItem('pmps_balance')) : 0;
+    const scoreDisplay = document.getElementById('score');
+    const tapZone = document.getElementById('tapZone');
 
-    scoreEl.textContent = score.toLocaleString();
+    scoreDisplay.textContent = count.toLocaleString();
 
-    function handleEvent(e) {
-      score++;
-      scoreEl.textContent = score.toLocaleString();
-      localStorage.setItem('pumps_ai_score_v2', score);
+    function doTap(e) {
+      count++;
+      scoreDisplay.textContent = count.toLocaleString();
+      localStorage.setItem('pmps_balance', count);
 
-      // Вибрация для Telegram
+      // Вибрация в Telegram
       if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('light');
+        tg.HapticFeedback.impactOccurred('medium');
       }
 
-      // Эффект вылетающего текста
+      // Эффект +1
       const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
       const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
       
       const p = document.createElement('div');
-      p.className = 'particle';
+      p.className = 'plus-one';
       p.textContent = '+1';
       p.style.left = (x - 20) + 'px';
       p.style.top = (y - 40) + 'px';
       document.body.appendChild(p);
       
-      setTimeout(() => p.remove(), 700);
+      setTimeout(() => p.remove(), 800);
     }
 
-    // Поддержка и кликов, и тапов
-    clickBtn.addEventListener('pointerdown', (e) => {
-      handleEvent(e);
+    // Поддержка всех типов нажатий
+    tapZone.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      doTap(e);
     });
   </script>
 </body>
