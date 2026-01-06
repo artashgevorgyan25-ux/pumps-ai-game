@@ -1,34 +1,33 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>PUMPS AI — Pump to Infinity</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>PUMPS AI — Pump to Infinity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      cursor: none;
-    }
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: black;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
 
-    #ui {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      color: #00ff99;
-      font-size: 20px;
-      font-weight: bold;
-      z-index: 10;
-    }
+#ui {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: #00ff99;
+  font-size: 20px;
+  font-weight: bold;
+  z-index: 10;
+}
 
-    canvas {
-      display: block;
-    }
-  </style>
+canvas {
+  display: block;
+}
+</style>
 </head>
 <body>
 
@@ -36,7 +35,6 @@
 <canvas id="game"></canvas>
 
 <script>
-/* ===== CANVAS ===== */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -44,14 +42,12 @@ function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-window.addEventListener("resize", resize);
 resize();
+window.addEventListener("resize", resize);
 
-/* ===== SCORE ===== */
 let score = 0;
 const scoreEl = document.getElementById("score");
 
-/* ===== MOUSE ===== */
 const mouse = {
   x: canvas.width / 2,
   y: canvas.height / 2
@@ -60,30 +56,33 @@ const mouse = {
 window.addEventListener("mousemove", e => {
   mouse.x = e.clientX;
   mouse.y = e.clientY;
-  score += 1;
+  score++;
   scoreEl.textContent = score;
 });
 
-/* ===== PUMPS AI IMAGE ===== */
+/* IMAGE */
 const pumpImg = new Image();
+let imgLoaded = false;
 pumpImg.src = "pumps-ai.png";
+pumpImg.onload = () => imgLoaded = true;
 
+/* PLAYER */
 const pump = {
   x: mouse.x,
   y: mouse.y,
-  size: 90
+  size: 80
 };
 
-/* ===== PARTICLES ===== */
+/* PARTICLES */
 const particles = [];
 
-function spawnParticle() {
+function addParticle() {
   particles.push({
     x: pump.x,
     y: pump.y,
-    vx: (Math.random() - 0.5) * 4,
-    vy: (Math.random() - 0.5) * 4,
-    life: 100
+    vx: (Math.random() - 0.5) * 3,
+    vy: (Math.random() - 0.5) * 3,
+    life: 60
   });
 }
 
@@ -93,42 +92,43 @@ function updateParticles() {
     p.x += p.vx;
     p.y += p.vy;
     p.life--;
-
     if (p.life <= 0) particles.splice(i, 1);
   }
 }
 
 function drawParticles() {
   ctx.fillStyle = "#00ff99";
-  particles.forEach(p => {
-    ctx.fillRect(p.x, p.y, 2, 2);
-  });
+  particles.forEach(p => ctx.fillRect(p.x, p.y, 2, 2));
 }
 
-/* ===== LOOP ===== */
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // smooth follow
   pump.x += (mouse.x - pump.x) * 0.15;
   pump.y += (mouse.y - pump.y) * 0.15;
 
-  // glow
   ctx.shadowColor = "#00ff99";
-  ctx.shadowBlur = 30;
+  ctx.shadowBlur = 25;
 
-  // draw image
-  ctx.drawImage(
-    pumpImg,
-    pump.x - pump.size / 2,
-    pump.y - pump.size / 2,
-    pump.size,
-    pump.size
-  );
+  if (imgLoaded) {
+    ctx.drawImage(
+      pumpImg,
+      pump.x - pump.size / 2,
+      pump.y - pump.size / 2,
+      pump.size,
+      pump.size
+    );
+  } else {
+    // fallback — неоновый круг
+    ctx.beginPath();
+    ctx.arc(pump.x, pump.y, pump.size / 2, 0, Math.PI * 2);
+    ctx.fillStyle = "#00ff99";
+    ctx.fill();
+  }
 
   ctx.shadowBlur = 0;
 
-  spawnParticle();
+  addParticle();
   updateParticles();
   drawParticles();
 
